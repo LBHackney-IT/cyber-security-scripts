@@ -75,11 +75,8 @@ def main():
                 "scheduled_scans": []
             }
 
-    # Given timestamp in string
-    time_str = '14/10/2023 00:00:00'
-
-    # create datetime object from timestamp string
-    start_time = datetime.strptime(time_str, '%d/%m/%Y %H:%M:%S')
+    tomorrow = datetime.today + datetime.timedelta(days=1)
+    start_time = tomorrow.time(0, 0, 0)
 
     for target_id, target in targets.items():
         target_name = target["name"]
@@ -90,7 +87,7 @@ def main():
         # See https://developers.probely.com
         schedule_payload = {
             "date_time": start_time.strftime('%Y-%m-%dT%H:%M:%SZ'),
-            "recurrence": "w", # weekly
+            "recurrence": "d", # daily
             "timezone": "UTC",
         }
 
