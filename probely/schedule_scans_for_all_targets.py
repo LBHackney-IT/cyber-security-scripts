@@ -24,7 +24,7 @@ def target_schedules(api_token):
 
     response = requests.get(scheduled_scans_endpoint,
                             headers=api_headers(api_token),
-                            timeout=10)
+                            timeout=30)
 
     # print(response.content)
     # results = list(map(flatten_scan_response, response.json()["results"]))
@@ -62,7 +62,7 @@ def main():
 
     response = requests.get(targets_endpoint,
                             headers=api_headers(api_token=api_token),
-                            timeout=10)
+                            timeout=30)
 
     results = response.json()["results"]
 
@@ -97,7 +97,7 @@ def main():
         schedule_count = len(target["scheduled_scans"])
 
         if schedule_count > 1:
-            print(f"ERROR: multiple scheduled scans found for target '{target_name}'")
+            print(f"ERROR: multiple scheduled scans found for target '{target_name}', skipping")
         elif schedule_count == 1:
             old_schedule = target["scheduled_scans"][0]["next_scan"]
             old_recurrence = target["scheduled_scans"][0]["recurrence"]
@@ -114,9 +114,10 @@ def main():
                 timeout=10
             )
 
-            print(response.status_code)
-            print(response.reason)
-            print(response.content)
+            if response.status_code != 200:
+                print(response.status_code)
+                print(response.reason)
+                print(response.content)
         else:
             print(f"Creating schedule for {target_name}: {schedule_payload}")
 
@@ -127,9 +128,10 @@ def main():
                 timeout=10
             )
 
-            print(response.status_code)
-            print(response.reason)
-            print(response.content)
+            if response.status_code != 201:
+                print(response.status_code)
+                print(response.reason)
+                print(response.content)
 
 if __name__ == '__main__':
     main()
