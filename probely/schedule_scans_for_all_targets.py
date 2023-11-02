@@ -6,6 +6,7 @@ and update them all to run at the same time (roughly)
 """
 
 from datetime import datetime
+from datetime import time
 from datetime import timedelta
 from urllib.parse import urljoin
 import requests
@@ -14,7 +15,10 @@ API_BASE_URL = "https://api.probely.com"
 
 def api_headers(api_token):
     """Get the appropriate API headers for Probely"""
-    return {"Authorization": f"JWT {api_token}"}
+    return {
+        "Authorization": f"JWT {api_token}",
+        "Content-Type": "application/json"
+        }
 
 def target_schedules(api_token):
     """Get a list of all the scheduled scans, grouped by target"""
@@ -75,8 +79,10 @@ def main():
                 "scheduled_scans": []
             }
 
-    tomorrow = datetime.today + datetime.timedelta(days=1)
-    start_time = tomorrow.time(0, 0, 0)
+    tomorrow = datetime.today() + timedelta(days=1)
+    midnight = time(0, 0, 0)
+
+    start_time = datetime.combine(tomorrow, midnight)
 
     for target_id, target in targets.items():
         target_name = target["name"]
@@ -88,7 +94,7 @@ def main():
         schedule_payload = {
             "date_time": start_time.strftime('%Y-%m-%dT%H:%M:%SZ'),
             "recurrence": "d", # daily
-            "timezone": "UTC",
+            "timezone": "UTC"
         }
 
         schedule_count = len(target["scheduled_scans"])
@@ -102,9 +108,9 @@ def main():
 
             scheduled_scan_put_url = urljoin(
                 API_BASE_URL,
-                f'targets/{target_id}/scheduledscans/{target["scheduled_scans"][0]["id"]}')
+                f'targets/{target_id}/scheduledscans/{target["scheduled_scans"][0]["id"]}/')
 
-            response = requests.patch(
+            response = requests.put(
                 scheduled_scan_put_url,
                 headers=api_headers(api_token=api_token),
                 json=schedule_payload,
@@ -112,6 +118,8 @@ def main():
             )
 
             if response.status_code != 200:
+                print(scheduled_scan_put_url)
+                print(schedule_payload)
                 print(response.status_code)
                 print(response.reason)
                 print(response.content)
