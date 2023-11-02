@@ -53,7 +53,7 @@ def target_schedules(api_token):
     return targets
 
 
-def main():
+def main():  # pylint: disable=too-many-locals
     """
     Find and update all targets with one or fewer scheduled scans to use
     a new schedule, stepping targets to prevent heavy load across our estate
