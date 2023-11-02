@@ -13,12 +13,14 @@ import requests
 
 API_BASE_URL = "https://api.probely.com"
 
+
 def api_headers(api_token):
     """Get the appropriate API headers for Probely"""
     return {
         "Authorization": f"JWT {api_token}",
         "Content-Type": "application/json"
         }
+
 
 def target_schedules(api_token):
     """Get a list of all the scheduled scans, grouped by target"""
@@ -49,6 +51,7 @@ def target_schedules(api_token):
             "recurrence": scheduled_scan["recurrence"],
         })
     return targets
+
 
 def main():
     """
@@ -93,22 +96,22 @@ def main():
         # See https://developers.probely.com
         schedule_payload = {
             "date_time": start_time.strftime('%Y-%m-%dT%H:%M:%SZ'),
-            "recurrence": "d", # daily
+            "recurrence": "d",  # daily
             "timezone": "UTC"
         }
 
         schedule_count = len(target["scheduled_scans"])
 
         if schedule_count > 1:
-            print(f"ERROR: multiple scheduled scans found for target '{target_name}', skipping")
+            print(f"ERROR: multiple scheduled scans found for target '{target_name}', skipping")  # pylint: disable=line-too-long # noqa
         elif schedule_count == 1:
             old_schedule = target["scheduled_scans"][0]["next_scan"]
             old_recurrence = target["scheduled_scans"][0]["recurrence"]
-            print(f"Updating schedule for {target_name} from {old_schedule} ({old_recurrence}) to {schedule_payload}") # pylint: disable=line-too-long
+            print(f"Updating schedule for {target_name} from {old_schedule} ({old_recurrence}) to {schedule_payload}")  # pylint: disable=line-too-long # noqa
 
             scheduled_scan_put_url = urljoin(
                 API_BASE_URL,
-                f'targets/{target_id}/scheduledscans/{target["scheduled_scans"][0]["id"]}/')
+                f'targets/{target_id}/scheduledscans/{target["scheduled_scans"][0]["id"]}/')  # noqa
 
             response = requests.put(
                 scheduled_scan_put_url,
@@ -137,6 +140,7 @@ def main():
                 print(response.status_code)
                 print(response.reason)
                 print(response.content)
+
 
 if __name__ == '__main__':
     main()
