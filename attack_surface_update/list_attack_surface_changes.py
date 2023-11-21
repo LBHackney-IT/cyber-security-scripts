@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-import gspread
 import re
 
-random_character_pattern = re.compile('^_[0-9a-f]{32}\.')
+import gspread
+
+random_character_pattern = re.compile('^_[0-9a-f]{32}\\.')
 
 # Service Account: updating-attack-surface-sa@updating-the-attack-surface.iam.gserviceaccount.com
 google_service_account = gspread.service_account(filename="./google_service_account_credentials.json")
@@ -35,7 +36,7 @@ for record in dns_records:
     elif '*.' in record['Name']:
         ignored_records.append(record)
     # Ignore if it's a load of random characters
-    elif random_character_pattern.match( record['Name'] ):
+    elif random_character_pattern.match(record['Name']):
         ignored_records.append(record)
     # Ignore records we _know_ we don't want to scan because they're email services
     elif record['Name'] == 'em6144.hackney.gov.uk' or record['Name'] == 'email.lb.hackney.gov.uk':
