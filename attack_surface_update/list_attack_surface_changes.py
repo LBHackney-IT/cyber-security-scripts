@@ -4,20 +4,35 @@ import re
 
 import gspread
 
-def load_google_sheet(url, sheet_index=0, credentials_file="./google_service_account_credentials.json"):
-    # Service Account: updating-attack-surface-sa@updating-the-attack-surface.iam.gserviceaccount.com
+#
+def load_google_sheet(url, sheet_title="Sheet1", credentials_file="./google_service_account_credentials.json"):
+    """Loads a Google Sheet and returns the contents of the sheet as an array of dictionaries"""
     google_service_account = gspread.service_account(filename=credentials_file)
-
     workbook = google_service_account.open_by_url(url)
-    worksheet = workbook.get_worksheet(sheet_index)
+    worksheet = workbook.worksheet(sheet_title)
     return worksheet.get_all_records()
+
+
+def pretty_print_list(list_to_print, title):
+    """Format the list with an underlined title, so we get consistent formatting"""
+    print(title)
+    print(len(title) * '-')
+
+    if not list_to_print:
+        print('🎉🎉🎉 Nothing')
+    else:
+        for record in sorted(list_to_print):
+            print(record)
+    print("\n")
 
 domain_verification_cname_pattern = re.compile('^_[0-9a-f]{32}\\.')
 
 # Open by url sheet from a spreadsheet in one go
 # 16a6lA5JWsqROZGgFElJZ8H7UP5zx8q8iFxnBT7XnFPE is an open copy of the data for dev purposes, in Ryan's drive.
 # FIXME: we need to use the auto-updating one for production.
-dns_records = load_google_sheet("https://docs.google.com/spreadsheets/d/16a6lA5JWsqROZGgFElJZ8H7UP5zx8q8iFxnBT7XnFPE")
+route53_export_url="https://docs.google.com/spreadsheets/d/197u2GPYJBZUViYF8vsXOEimHF2JL7Vi9owwBlroBYaA"
+route53_copy_url="https://docs.google.com/spreadsheets/d/16a6lA5JWsqROZGgFElJZ8H7UP5zx8q8iFxnBT7XnFPE"
+dns_records = load_google_sheet(route53_copy_url)
 
 # Massage the domain names so they're human-friendly
 for record in dns_records:
@@ -51,16 +66,15 @@ for record in dns_records:
 #
 
 # Load the attack surface sheet and grab the list of domain names
-# 175xUWcJKDsrobrSY9bslR6sEH06HqMo5Qb8yQXzegig is an open copy of the data for dev purposes, in Ryan's drive.
-# FIXME: we need to use the real one for production.
-attack_surface_dns_records = load_google_sheet("https://docs.google.com/spreadsheets/d/175xUWcJKDsrobrSY9bslR6sEH06HqMo5Qb8yQXzegig", sheet_index=2)
+attack_surface_url = "https://docs.google.com/spreadsheets/d/1yD2sgJt6b9vsp470GZE9RAtUGXsl3Dj3lqOQnt9q1TM/edit?pli=1#gid=341406461"
+attack_surface_records = load_google_sheet(attack_surface_url, sheet_title="Current Attack Surface")
 
 # Compare that with the DNS list
-route53_domain_names = [record['Name'] for record in included_records]
+route53_domains = [record['Name'] for record in included_records]
 
-attack_surface_host_names = []
+attack_surface_domains = []
 non_hackney_domains = []
-for record in attack_surface_dns_records:
+for record in attack_surface_records:
     domain_name = record['Hostname/URL/IP Address'].lower()
     
     # Strip HTTP/S protocol as we just want the domain name
@@ -68,23 +82,14 @@ for record in attack_surface_dns_records:
 
     # Only add to our list if it's a Hackney domain
     if 'hackney.gov.uk' in domain_name:
-        attack_surface_host_names.append(domain_name)
+        attack_surface_domains.append(domain_name)
     else:
         non_hackney_domains.append(domain_name)
 
-print('To be added to the attack surface')
-print('---------------------------------')
-for record in sorted(set(route53_domain_names).difference(set(attack_surface_host_names))):
-    print(record)
-print("\n")
+pretty_print_list(set(route53_domains).difference(set(attack_surface_domains)), 
+                  title='To be added to the attack surface')
 
-print("Things we might want to REMOVE (check these aren't nameservers)")
-print("---------------------------------------------------------------")
-for record in sorted(set(attack_surface_host_names).difference(set(route53_domain_names))):
-    print(record)
-print("\n")
+pretty_print_list(set(attack_surface_domains).difference(set(route53_domains)), 
+                  title="Things we might want to REMOVE (check these aren't nameservers)")
 
-print('Non-Hackney domain names. Check these:')
-print('--------------------------------------')
-for record in sorted(non_hackney_domains):
-    print(record)
+pretty_print_list(non_hackney_domains, title='Non-Hackney domain names. Check these:')
