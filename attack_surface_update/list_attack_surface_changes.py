@@ -56,12 +56,15 @@ for record in dns_records:
 attack_surface_dns_records = load_google_sheet("https://docs.google.com/spreadsheets/d/175xUWcJKDsrobrSY9bslR6sEH06HqMo5Qb8yQXzegig", sheet_index=2)
 
 # Compare that with the DNS list
-dns_record_host_names = [record['Name'] for record in included_records]
+route53_domain_names = [record['Name'] for record in included_records]
 
 attack_surface_host_names = []
 non_hackney_domains = []
 for record in attack_surface_dns_records:
-    domain_name = record['Hostname/URL/IP Address'].replace('https://', "").replace('http://', "").lower()
+    domain_name = record['Hostname/URL/IP Address'].lower()
+    
+    # Strip HTTP/S protocol as we just want the domain name
+    domain_name = domain_name.replace('https://', "").replace('http://', "")
 
     # Only add to our list if it's a Hackney domain
     if 'hackney.gov.uk' in domain_name:
@@ -69,16 +72,19 @@ for record in attack_surface_dns_records:
     else:
         non_hackney_domains.append(domain_name)
 
-print('\n\nThings we want to ADD')
-for record in list(set(dns_record_host_names).difference(set(attack_surface_host_names))):
+print('To be added to the attack surface')
+print('---------------------------------')
+for record in sorted(set(route53_domain_names).difference(set(attack_surface_host_names))):
     print(record)
+print("\n")
 
-
-print("\n\nThings we might want to REMOVE (check these aren't nameservers)")
-for record in set(attack_surface_host_names).difference(set(dns_record_host_names)):
+print("Things we might want to REMOVE (check these aren't nameservers)")
+print("---------------------------------------------------------------")
+for record in sorted(set(attack_surface_host_names).difference(set(route53_domain_names))):
     print(record)
+print("\n")
 
-print('\n\nNon-Hackney domain names. Check these:')
-for record in non_hackney_domains:
+print('Non-Hackney domain names. Check these:')
+print('--------------------------------------')
+for record in sorted(non_hackney_domains):
     print(record)
-    
