@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
 import re
-
 import gspread
 
-#
 def load_google_sheet(url, sheet_title="Sheet1", credentials_file="./google_service_account_credentials.json"):
     """Loads a Google Sheet and returns the contents of the sheet as an array of dictionaries"""
     google_service_account = gspread.service_account(filename=credentials_file)
@@ -78,7 +76,10 @@ for record in attack_surface_records:
     domain_name = record['Hostname/URL/IP Address'].lower()
     
     # Strip HTTP/S protocol as we just want the domain name
-    domain_name = domain_name.replace('https://', "").replace('http://', "")
+    domain_name = re.sub("https?://","", domain_name)
+
+    # Strip any trailing URL pieces - anything from the first / or ? in the URL
+    domain_name = re.sub("[/?)].*","", domain_name)
 
     # Only add to our list if it's a Hackney domain
     if 'hackney.gov.uk' in domain_name:
