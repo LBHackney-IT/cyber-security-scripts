@@ -64,7 +64,7 @@ for record in dns_records:
 #
 
 # Load the attack surface sheet and grab the list of domain names
-attack_surface_url = "https://docs.google.com/spreadsheets/d/1yD2sgJt6b9vsp470GZE9RAtUGXsl3Dj3lqOQnt9q1TM/edit?pli=1#gid=341406461"
+attack_surface_url = "https://docs.google.com/spreadsheets/d/1KbUY_k5D_xbz633XalWwKcIT9_vV4ysMT7mIN5EECj0"
 attack_surface_records = load_google_sheet(attack_surface_url, sheet_title="Current Attack Surface")
 
 # Compare that with the DNS list
