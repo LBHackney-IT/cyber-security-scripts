@@ -26,11 +26,8 @@ def pretty_print_list(list_to_print, title):
 domain_verification_cname_pattern = re.compile('^_[0-9a-f]{32}\\.')
 
 # Open by url sheet from a spreadsheet in one go
-# 16a6lA5JWsqROZGgFElJZ8H7UP5zx8q8iFxnBT7XnFPE is an open copy of the data for dev purposes, in Ryan's drive.
-# FIXME: we need to use the auto-updating one for production.
 route53_export_url="https://docs.google.com/spreadsheets/d/197u2GPYJBZUViYF8vsXOEimHF2JL7Vi9owwBlroBYaA"
-route53_copy_url="https://docs.google.com/spreadsheets/d/16a6lA5JWsqROZGgFElJZ8H7UP5zx8q8iFxnBT7XnFPE"
-dns_records = load_google_sheet(route53_copy_url)
+dns_records = load_google_sheet(route53_export_url)
 
 # Massage the domain names so they're human-friendly
 for record in dns_records:
@@ -38,11 +35,15 @@ for record in dns_records:
     record['Name'] = record['Name'].rstrip('.').lower()
 
 # Process the dns records
+ns_domains = []
 ignored_records = []
 included_records = []
 for record in dns_records:
+
     # Ignore if it's not a CNAME or A records
-    if record['Type'] != 'CNAME' and record['Type'] != 'A':
+    if record['Type'] == 'NS':
+        ns_domains.append(record['Name'])
+    elif record['Type'] != 'CNAME' and record['Type'] != 'A':
         ignored_records.append(record)
     # Ignore if it includes domainkey
     elif 'domainkey' in record['Name']:
@@ -87,10 +88,14 @@ for record in attack_surface_records:
     else:
         non_hackney_domains.append(domain_name)
 
+domains_to_remove = set(attack_surface_domains).difference(set(route53_domains))
+
+domains_to_remove = [domain for domain in domains_to_remove if domain not in ns_domains]
+
 pretty_print_list(set(route53_domains).difference(set(attack_surface_domains)), 
                   title='To be added to the attack surface')
 
-pretty_print_list(set(attack_surface_domains).difference(set(route53_domains)), 
+pretty_print_list(domains_to_remove,
                   title="Things we might want to REMOVE (check these aren't nameservers)")
 
 pretty_print_list(non_hackney_domains, title='Non-Hackney domain names. Check these:')
