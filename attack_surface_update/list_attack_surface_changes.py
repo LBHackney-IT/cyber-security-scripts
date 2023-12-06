@@ -60,9 +60,8 @@ for record in dns_records:
     else:
         included_records.append(record)
 
-##
 # Compare the actual DNS records with what we've got in the attack surface sheet
-#
+
 
 # Load the attack surface sheet and grab the list of domain names
 attack_surface_url = "https://docs.google.com/spreadsheets/d/1KbUY_k5D_xbz633XalWwKcIT9_vV4ysMT7mIN5EECj0"
@@ -82,8 +81,11 @@ for record in attack_surface_records:
     # Strip any trailing URL pieces - anything from the first / or ? in the URL
     domain_name = re.sub("[/?)].*","", domain_name)
 
+    # Ignore blogs becuase it's a different name server
+    if domain_name.endswith('.blogs.hackney.gov.uk'):
+        pass
     # Only add to our list if it's a Hackney domain
-    if 'hackney.gov.uk' in domain_name:
+    elif 'hackney.gov.uk' in domain_name:
         attack_surface_domains.append(domain_name)
     else:
         non_hackney_domains.append(domain_name)
@@ -98,4 +100,7 @@ pretty_print_list(set(route53_domains).difference(set(attack_surface_domains)),
 pretty_print_list(domains_to_remove,
                   title="Things we might want to REMOVE (check these aren't nameservers)")
 
-pretty_print_list(non_hackney_domains, title='Non-Hackney domain names. Check these:')
+# 
+# Uncomment this is you want to see the non-hackney domain list
+#
+# pretty_print_list(non_hackney_domains, title='Non-Hackney domain names. Check these:')
