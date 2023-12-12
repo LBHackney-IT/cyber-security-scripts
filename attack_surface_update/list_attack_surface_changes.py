@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+import os
 import re
 import gspread
+from slack_sdk.webhook import WebhookClient
 
 def load_google_sheet(url, sheet_title="Sheet1", credentials_file="./google_service_account_credentials.json"):
     """Loads a Google Sheet and returns the contents of the sheet as an array of dictionaries"""
@@ -22,6 +24,19 @@ def pretty_print_list(list_to_print, title):
         for record in sorted(list_to_print):
             print(record)
     print("\n")
+
+def format_list(list_to_print, title):
+    """Format the list with an underlined title, so we get consistent formatting"""
+    formatted_list = title + '\n' + (len(title) * '-') + '\n'
+
+    if not list_to_print:
+        formatted_list = formatted_list + '🎉🎉🎉 Nothing\n'
+    else:
+        for record in sorted(list_to_print):
+            formatted_list = formatted_list + record + '\n'
+    formatted_list = formatted_list + '\n'
+
+    return formatted_list
 
 domain_verification_cname_pattern = re.compile('^_[0-9a-f]{32}\\.')
 
@@ -104,3 +119,21 @@ pretty_print_list(domains_to_remove,
 # Uncomment this is you want to see the non-hackney domain list
 #
 # pretty_print_list(non_hackney_domains, title='Non-Hackney domain names. Check these:')
+
+
+# Post this to slack
+webhook = WebhookClient(os.environ['SLACK_WEBHOOK_URL'])
+response = webhook.send(
+    text="fallback",
+    blocks=[
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "this is a test from Ryan and Mia's Probely script"
+            }
+        }
+    ]
+)
+print(response.status_code)
+print(response.body)
