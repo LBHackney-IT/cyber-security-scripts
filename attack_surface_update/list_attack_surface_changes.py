@@ -12,22 +12,15 @@ def load_google_sheet(url, sheet_title="Sheet1", credentials_file="./google_serv
     worksheet = workbook.worksheet(sheet_title)
     return worksheet.get_all_records()
 
-
 def pretty_print_list(list_to_print, title):
-    """Format the list with an underlined title, so we get consistent formatting"""
-    print(title)
-    print(len(title) * '-')
+    print(format_list(list_to_print, title))
 
-    if not list_to_print:
-        print('🎉🎉🎉 Nothing')
-    else:
-        for record in sorted(list_to_print):
-            print(record)
-    print("\n")
+def bold(text):
+    return f"*{text}*"
 
 def format_list(list_to_print, title):
     """Format the list with an underlined title, so we get consistent formatting"""
-    formatted_list = title + '\n' + (len(title) * '-') + '\n'
+    formatted_list = bold(title) + '\n'
 
     if not list_to_print:
         formatted_list = formatted_list + '🎉🎉🎉 Nothing\n'
@@ -109,12 +102,15 @@ domains_to_remove = set(attack_surface_domains).difference(set(route53_domains))
 
 domains_to_remove = [domain for domain in domains_to_remove if domain not in ns_domains]
 
-pretty_print_list(set(route53_domains).difference(set(attack_surface_domains)), 
-                  title='To be added to the attack surface')
+script_repo_url = "https://github.com/LBHackney-IT/cyber-security-scripts/tree/main/attack_surface_update"
+slack_message = f"The attack surface has been checked against Route53 with this <{script_repo_url}|script>\n\n" 
+slack_message += format_list(set(route53_domains).difference(set(attack_surface_domains)), 
+                             title=f"To be added to the <{attack_surface_url}|attack surface>")
 
-pretty_print_list(domains_to_remove,
-                  title="Things we might want to REMOVE (check these aren't nameservers)")
+slack_message += format_list(domains_to_remove,
+                             title=f"Things we might want to REMOVE from the <{attack_surface_url}|attack surface> (check these aren't nameservers)")
 
+print(slack_message)
 # 
 # Uncomment this is you want to see the non-hackney domain list
 #
@@ -130,10 +126,9 @@ response = webhook.send(
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "this is a test from Ryan and Mia's Probely script"
+                "text": slack_message
             }
         }
     ]
 )
-print(response.status_code)
-print(response.body)
+
