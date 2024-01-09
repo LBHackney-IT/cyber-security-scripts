@@ -1,0 +1,25 @@
+name: Probely high vulnerability checker
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * *'  # every Monday at 9am
+
+jobs:
+  scheduled-job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        uses: VaultVulp/action-pipenv@v2.0.1
+        with:
+          command: install # Install all dependencies
+
+      - name: Check for Probely high vulnerabilities (Slackbot)
+        uses: VaultVulp/action-pipenv@v2.0.1
+        with:
+          command: run ./probely_high_vulnerability_slackbot.py
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          PROBELY_API_TOKEN: ${{ secrets.PROBELY_API_TOKEN }}
