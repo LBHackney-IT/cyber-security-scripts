@@ -1,15 +1,27 @@
-# cyber-security-scripts
-A selection of scripts the Cyber Security team uses to automate things.
+# Probely utility scripts
 
-This repository is open-source and publicly available, so we won't add anything secret here.
+## Prerequisites
 
-## Probely scripts
+1. Python 3
 
-The [`probely`](probely/) directory holds a number of useful scripts to automate admin tasks on our vulnerability scanner.
+> ℹ️  Your system may use `python` instead of `python3`, in which case modify the commands below.
 
-## Secrets detection with ggshield
+2. [Pipenv](https://pypi.org/project/pipenv/) to manage dependencies and the virtualenv.
 
-We use GitGuardian and `ggshield` to scan for secrets. Ensure you configure local pre-commit hooks when you clone the repository if you don't already have global pre-commit hooks configured:
+3. A Probely API token. You can get one [here](https://plus.probely.app/api-keys).
 
-1. [Install ggshield](https://docs.gitguardian.com/ggshield-docs/getting-started)
-2. Add the [pre-commit](https://docs.gitguardian.com/ggshield-docs/integrations/git-hooks/pre-commit) and [pre-push](https://docs.gitguardian.com/ggshield-docs/integrations/git-hooks/pre-push) hooks. We recommend the global hooks as this provides protection across all your repositories.
+## Getting set up
+
+```bash
+pipenv install
+```
+
+## Update the schedule for all targets
+
+This script updates all targets to have a rolling start. It excludes:
+
+- targets that have more than one scan schedule (because we don't know which one to replace). These are logged with the word `skipping`, and should be manually checked and updated.
+
+```bash
+pipenv run ./schedule_scans_for_all_targets.py
+```
