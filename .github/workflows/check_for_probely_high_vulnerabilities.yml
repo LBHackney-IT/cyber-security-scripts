@@ -3,7 +3,7 @@ name: Probely high vulnerability checker
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 9 * * *'  # every Monday at 9am
+    - cron: '0 9 * * 1'  # every Monday at 9am
 
 jobs:
   scheduled-job:
